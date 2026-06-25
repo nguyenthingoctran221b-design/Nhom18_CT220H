@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "557802161294",
+    "project_id": "csdl-d9373",
+    "storage_bucket": "csdl-d9373.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:557802161294:android:17581e7054af862ad4f5df",
+        "android_client_info": {
+          "package_name": "com.nhom18.ud_dat_mon_an"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCU8vZo0340Rx6I52rkJbu1ACIQNabDYkA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
