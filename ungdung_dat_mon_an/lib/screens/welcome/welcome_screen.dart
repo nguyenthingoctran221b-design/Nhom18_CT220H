@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../auth/login_screen.dart';
+import '../e-menu/emenu_screen.dart';
+
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -20,10 +21,10 @@ class WelcomeScreen extends StatelessWidget {
                 // LOGO + NÚT ẨN
                 GestureDetector(
                   onDoubleTap: () {
-                    // Nhấn đúp vào Logo sẽ chuyển sang trang Đăng nhập
+                    // Chuyển sang trang E-Menu
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      MaterialPageRoute(builder: (_) => const EMenuScreen()),
                     );
                   },
                   child: Hero(
@@ -78,8 +79,11 @@ class WelcomeScreen extends StatelessWidget {
                   height: 60,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Chuyển sang màn hình Menu khách hàng
-                      print("Bắt đầu đặt món");
+                      // Chuyển sang màn hình E-Menu khách hàng
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const EMenuScreen()),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
