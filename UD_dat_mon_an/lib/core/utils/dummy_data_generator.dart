@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/user_model.dart';
 import '../../models/table_model.dart';
 import '../models/menu_data.dart';
-import 'vietnamese_menu_data.dart';
 
 class DummyDataGenerator {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -66,110 +65,15 @@ class DummyDataGenerator {
 
   static Future<void> _seedMenu() async {
     final menuCol = _firestore.collection('menu');
-    final categoriesCol = _firestore.collection('categories');
 
-    // Check if we already have the new Vietnamese menu seeded
-    final checkSnapshot = await menuCol.where('name', isEqualTo: 'Lẩu Riêu Cua Sườn Sụn').get();
-    if (checkSnapshot.docs.isNotEmpty) {
-      print('🌱 [DummyDataGenerator] New Vietnamese menu is already seeded.');
-      return;
-    }
 
-    print('🌱 [DummyDataGenerator] Overwriting old menu with new Vietnamese menu...');
-
-    // 1. Delete all existing items in 'menu' collection
-    final menuSnapshot = await menuCol.get();
-    for (var doc in menuSnapshot.docs) {
-      await doc.reference.delete();
-    }
-
-    // 2. Delete all existing categories in 'categories' collection
-    final categoriesSnapshot = await categoriesCol.get();
-    for (var doc in categoriesSnapshot.docs) {
-      await doc.reference.delete();
-    }
-
-    // 3. Seed 'categories' collection with correct IDs and display names
-    final categorySpecs = [
-      {"id": "cat_lau", "name": "Nước Lẩu", "sort_order": 1, "icon": "soup"},
-      {"id": "cat_nhung", "name": "Đồ Nhúng Lẩu", "sort_order": 2, "icon": "beef"},
-      {"id": "cat_khaivi", "name": "Món Khai Vị", "sort_order": 3, "icon": "utensils"},
-      {"id": "cat_cuon", "name": "Món Cuốn", "sort_order": 4, "icon": "utensils"},
-      {"id": "cat_trangmieng", "name": "Món Tráng Miệng", "sort_order": 5, "icon": "ice-cream"},
-      {"id": "cat_douong", "name": "Đồ Uống", "sort_order": 6, "icon": "cup-soda"},
-    ];
-
-    for (var spec in categorySpecs) {
-      await categoriesCol.doc(spec['id'] as String).set({
-        'name': spec['name'],
-        'sort_order': spec['sort_order'],
-        'icon': spec['icon'],
-      });
-    }
-
-    // 4. Seed 'menu' collection with items from vietnameseMenuData
-    final Map<String, String> categoryNames = {
-      "cat_lau": "Nước Lẩu",
-      "cat_nhung": "Đồ Nhúng Lẩu",
-      "cat_khaivi": "Món Khai Vị",
-      "cat_cuon": "Món Cuốn",
-      "cat_trangmieng": "Món Tráng Miệng",
-      "cat_douong": "Đồ Uống"
-    };
-
-    int itemCounter = 1;
-    for (var entry in vietnameseMenuData.entries) {
-      final categoryId = entry.key;
-      final items = entry.value;
-      final categoryName = categoryNames[categoryId] ?? "Khác";
-
-      for (var item in items) {
-        final name = item['name'] as String;
-        final description = item['description'] as String;
-        final price = item['price'] as int;
-        final imageUrl = item['image'] as String;
-        final ingredientsStr = item['ingredients'] as String;
-
-        // Split ingredients by comma
-        final List<String> ingredients = ingredientsStr
-            .split(',')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
-
-        // Assign preparation time (TFP)
         int tfp = 10;
-        if (categoryId == 'cat_lau' || categoryId == 'cat_douong') {
-          tfp = 5;
-        } else if (categoryId == 'cat_khaivi' || categoryId == 'cat_cuon') {
-          tfp = 10;
-        } else if (categoryId == 'cat_trangmieng') {
-          tfp = 8;
-        } else {
-          tfp = 15;
-        }
-
-        // Generate a unique ID for the item, e.g. lau_01, nhung_02, etc.
-        final prefix = categoryId.replaceAll('cat_', '');
-        final id = '${prefix}_${itemCounter.toString().padLeft(2, '0')}';
-        itemCounter++;
 
         final menuItem = MenuItem(
-          id: id,
-          name: name,
-          price: price,
-          description: description,
-          ingredients: ingredients,
-          imageUrl: imageUrl,
-          isAvailable: true,
           tfp: tfp,
-          category: categoryName,
         );
 
-        await menuCol.doc(id).set(menuItem.toMap());
       }
     }
-
-    print('🌱 [DummyDataGenerator] New Vietnamese menu successfully seeded!');
   }
 }
