@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/user_model.dart';
 import '../../models/table_model.dart';
 import '../models/menu_data.dart';
 
@@ -65,14 +64,30 @@ class DummyDataGenerator {
 
   static Future<void> _seedMenu() async {
     final menuCol = _firestore.collection('menu');
+    
+    final snapshot = await menuCol.limit(1).get();
+    if (snapshot.docs.isNotEmpty) return;
 
-
+    for (var category in menuData) {
+      for (var item in category.items) {
+        // TFP logic: if it's hotpot/water, fast (5 mins). If it's main dish, slow (15-20 mins).
         int tfp = 10;
+        if (category.icon == 'soup' || category.icon == 'cup-soda') tfp = 5;
+        if (category.icon == 'chef-hat') tfp = 20;
 
         final menuItem = MenuItem(
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          description: item.description,
+          ingredients: item.ingredients,
+          imageUrl: item.imageUrl,
+          isAvailable: item.isAvailable,
           tfp: tfp,
+          category: category.category,
         );
 
+        await menuCol.doc(item.id).set(menuItem.toMap());
       }
     }
   }
