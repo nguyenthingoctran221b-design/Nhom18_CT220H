@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../../models/menu_item.dart';
+import '../core/models/menu_data.dart';
 
 /// ============================================================
 /// FOOD DETAIL PANEL — Cột Phải (35% màn hình)

@@ -1,17 +1,117 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../auth/login_screen.dart';
-import '../menu/main_menu_screen.dart';
+import '../e-menu/emenu_screen.dart';
+// import '../auth/login_screen.dart';
+// import '../menu/main_menu_screen.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  void _showTableSelectionDialog() {
+    String selectedArea = 'A';
+    String selectedTable = '01';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text(
+                'Chọn Bàn',
+                style: TextStyle(
+                  fontFamily: 'Playfair Display',
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      const Text('Khu vực: ', style: TextStyle(fontSize: 18)),
+                      const SizedBox(width: 16),
+                      DropdownButton<String>(
+                        value: selectedArea,
+                        items: ['A', 'B', 'C'].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value, style: const TextStyle(fontSize: 18)),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            selectedArea = newValue!;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Text('Số bàn: ', style: TextStyle(fontSize: 18)),
+                      const SizedBox(width: 16),
+                      DropdownButton<String>(
+                        value: selectedTable,
+                        items: List.generate(20, (index) => (index + 1).toString().padLeft(2, '0')).map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value, style: const TextStyle(fontSize: 18)),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            selectedTable = newValue!;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close dialog
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EMenuScreen(tableInfo: '$selectedArea-$selectedTable'),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Xác nhận'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // Background trang trí nhẹ (có thể thêm hoa văn Indochine ở đây)
+          // Background trang trí nhẹ
           Container(color: AppColors.background),
 
           Center(
@@ -21,9 +121,10 @@ class WelcomeScreen extends StatelessWidget {
                 // LOGO + NÚT ẨN
                 GestureDetector(
                   onDoubleTap: () {
-                    Navigator.push(
+                    // Chuyển sang trang E-Menu với bàn mặc định
+                    Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      MaterialPageRoute(builder: (_) => const EMenuScreen(tableInfo: 'A-01')),
                     );
                   },
                   child: Hero(
@@ -43,7 +144,6 @@ class WelcomeScreen extends StatelessWidget {
                         ],
                       ),
                       child: const Icon(Icons.restaurant_menu, size: 80, color: AppColors.primary),
-                      // Thay Icon bằng Image.asset('assets/logo.png') khi bạn có logo
                     ),
                   ),
                 ),
@@ -77,14 +177,7 @@ class WelcomeScreen extends StatelessWidget {
                   width: 300,
                   height: 60,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MainMenuScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: _showTableSelectionDialog,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.secondary,
@@ -103,7 +196,7 @@ class WelcomeScreen extends StatelessWidget {
             ),
           ),
 
-          // Version info hoặc Footer ẩn
+          // Version info
           const Positioned(
             bottom: 20,
             left: 0,
@@ -117,3 +210,4 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 }
+

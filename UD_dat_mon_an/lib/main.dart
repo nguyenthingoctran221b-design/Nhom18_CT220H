@@ -1,24 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'core/constants/app_colors.dart';
-import 'screens/welcome/welcome_screen.dart';
-import 'package:firebase_core/firebase_core.dart'; // 1. Import thư viện Firebase
-import 'firebase_options.dart'; // 2. Import file cấu hình thủ công bạn vừa tạo
+import 'screens/auth/login_screen.dart';
+import 'core/utils/dummy_data_generator.dart';
 
-void main() async{
+import 'package:provider/provider.dart';
+import 'providers/cart_provider.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  print('--- App Starting ---');
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(const Duration(seconds: 10));
+    print('--- Firebase Initialized ---');
+  } catch (e) {
+    print('--- Firebase Initialization Error: $e ---');
+    // Vẫn tiếp tục chạy app nhưng có thể các tính năng Firebase sẽ lỗi
+  }
 
+  // Gọi hàm seedData (chạy nền, không block UI)
+  DummyDataGenerator.seedData().catchError((e) => print('Seed data error: $e'));
 
-  // Khóa màn hình ngang cho Tablet
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  runApp(const SmartEMenuApp());
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+      ],
+      child: const SmartEMenuApp(),
+    ),
+  );
 }
 
 class SmartEMenuApp extends StatelessWidget {
@@ -32,13 +52,13 @@ class SmartEMenuApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
-        fontFamily: 'Playfair Display', // Font chữ sang trọng Indochine
+        fontFamily: 'Playfair Display',
         textTheme: const TextTheme(
           displayLarge: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
           bodyLarge: TextStyle(color: AppColors.text),
         ),
       ),
-      home: const WelcomeScreen(),
+      home: const LoginScreen(),
     );
   }
 }

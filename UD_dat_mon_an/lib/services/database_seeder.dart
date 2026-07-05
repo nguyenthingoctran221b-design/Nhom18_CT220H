@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import '../core/utils/vietnamese_menu_data.dart';
 
 /// ============================================================
 /// DATABASE SEEDER
@@ -296,34 +297,98 @@ class DatabaseSeeder {
     try {
       debugPrint('🌱 [DatabaseSeeder] Bắt đầu import dữ liệu...');
 
+      // 1. Delete all existing items in 'menu' collection
+      final menuSnapshot = await _db.collection('menu').get();
+      for (var doc in menuSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      // 2. Delete all existing categories in 'categories' collection
+      final categoriesSnapshot = await _db.collection('categories').get();
+      for (var doc in categoriesSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
       final WriteBatch batch = _db.batch();
 
-      for (int i = 0; i < _menuData.length; i++) {
-        final categoryData = _menuData[i];
-        final String categoryId = categoryData['category_id'] as String;
+      // 3. Seed 'categories' collection with correct IDs and display names
+      final categorySpecs = [
+        {"id": "cat_lau", "name": "Nước Lẩu", "sort_order": 1, "icon": "soup"},
+        {"id": "cat_nhung", "name": "Đồ Nhúng Lẩu", "sort_order": 2, "icon": "beef"},
+        {"id": "cat_khaivi", "name": "Món Khai Vị", "sort_order": 3, "icon": "utensils"},
+        {"id": "cat_cuon", "name": "Món Cuốn", "sort_order": 4, "icon": "utensils"},
+        {"id": "cat_trangmieng", "name": "Món Tráng Miệng", "sort_order": 5, "icon": "ice-cream"},
+        {"id": "cat_douong", "name": "Đồ Uống", "sort_order": 6, "icon": "cup-soda"},
+      ];
 
-        // --- Ghi document vào collection 'categories' ---
-        final categoryRef = _db.collection('categories').doc(categoryId);
+      for (var spec in categorySpecs) {
+        final categoryRef = _db.collection('categories').doc(spec['id'] as String);
         batch.set(categoryRef, {
-          'name': categoryData['category_name'],
-          'sort_order': categoryData['sort_order'],
+          'name': spec['name'],
+          'sort_order': spec['sort_order'],
+          'icon': spec['icon'],
         });
+      }
 
-        // --- Ghi từng món vào collection 'menu_items' ---
-        final items = categoryData['items'] as List<dynamic>;
-        for (final item in items) {
-          final itemMap = item as Map<String, dynamic>;
-          final String itemId = itemMap['id'] as String;
+      // 4. Seed 'menu' collection with items from vietnameseMenuData
+      final Map<String, String> categoryNames = {
+        "cat_lau": "Nước Lẩu",
+        "cat_nhung": "Đồ Nhúng Lẩu",
+        "cat_khaivi": "Món Khai Vị",
+        "cat_cuon": "Món Cuốn",
+        "cat_trangmieng": "Món Tráng Miệng",
+        "cat_douong": "Đồ Uống"
+      };
 
-          final itemRef = _db.collection('menu_items').doc(itemId);
+      int itemCounter = 1;
+      int totalItems = 0;
+      for (var entry in vietnameseMenuData.entries) {
+        final categoryId = entry.key;
+        final items = entry.value;
+        final categoryName = categoryNames[categoryId] ?? "Khác";
+
+        for (var item in items) {
+          final name = item['name'] as String;
+          final description = item['description'] as String;
+          final price = item['price'] as int;
+          final imageUrl = item['image'] as String;
+          final ingredientsStr = item['ingredients'] as String;
+
+          // Split ingredients by comma
+          final List<String> ingredients = ingredientsStr
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+
+          // Assign preparation time (TFP)
+          int tfp = 10;
+          if (categoryId == 'cat_lau' || categoryId == 'cat_douong') {
+            tfp = 5;
+          } else if (categoryId == 'cat_khaivi' || categoryId == 'cat_cuon') {
+            tfp = 10;
+          } else if (categoryId == 'cat_trangmieng') {
+            tfp = 8;
+          } else {
+            tfp = 15;
+          }
+
+          // Generate a unique ID for the item, e.g. lau_01, nhung_02, etc.
+          final prefix = categoryId.replaceAll('cat_', '');
+          final id = '${prefix}_${itemCounter.toString().padLeft(2, '0')}';
+          itemCounter++;
+          totalItems++;
+
+          final itemRef = _db.collection('menu').doc(id);
           batch.set(itemRef, {
-            'name': itemMap['name'],
-            'price': itemMap['price'],
-            'description': itemMap['description'],
-            'ingredients': itemMap['ingredients'],
-            'image_url': itemMap['image_url'],
-            'is_available': itemMap['is_available'],
-            'category_id': categoryId, // Liên kết với category cha
+            'name': name,
+            'price': price,
+            'description': description,
+            'ingredients': ingredients,
+            'imageUrl': imageUrl,
+            'isAvailable': true,
+            'tfp': tfp,
+            'category': categoryName,
           });
         }
       }
@@ -333,8 +398,8 @@ class DatabaseSeeder {
 
       debugPrint(
         '✅ [DatabaseSeeder] Import thành công! '
-        '${_menuData.length} categories và '
-        '${_menuData.fold(0, (sum, c) => sum + (c['items'] as List).length)} món ăn.',
+        '${categorySpecs.length} categories và '
+        '$totalItems món ăn.',
       );
       return true;
     } catch (e) {

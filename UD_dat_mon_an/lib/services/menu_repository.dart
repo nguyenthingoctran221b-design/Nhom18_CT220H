@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/menu_category.dart';
-import '../models/menu_item.dart';
+import '../core/models/menu_data.dart';
 
 /// ============================================================
 /// MENU REPOSITORY
@@ -38,14 +37,36 @@ class MenuRepository {
   /// Stream trả về danh sách các món thuộc một category cụ thể.
   /// [categoryId]: ID của category cần lọc.
   Stream<List<MenuItem>> watchItemsByCategory(String categoryId) {
+    String categoryName = categoryId;
+    switch (categoryId) {
+      case 'cat_lau':
+        categoryName = 'Nước Lẩu';
+        break;
+      case 'cat_nhung':
+        categoryName = 'Đồ Nhúng Lẩu';
+        break;
+      case 'cat_khaivi':
+        categoryName = 'Món Khai Vị';
+        break;
+      case 'cat_cuon':
+        categoryName = 'Món Cuốn';
+        break;
+      case 'cat_trangmieng':
+        categoryName = 'Món Tráng Miệng';
+        break;
+      case 'cat_douong':
+        categoryName = 'Đồ Uống';
+        break;
+    }
+
     return _db
-        .collection('menu_items')
-        .where('category_id', isEqualTo: categoryId)
-        .where('is_available', isEqualTo: true)
+        .collection('menu')
+        .where('category', isEqualTo: categoryName)
+        .where('isAvailable', isEqualTo: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => MenuItem.fromFirestore(doc))
+              .map((doc) => MenuItem.fromMap(doc.id, doc.data() as Map<String, dynamic>))
               .toList(),
         );
   }
@@ -53,8 +74,8 @@ class MenuRepository {
   /// Future lấy thông tin chi tiết một món theo ID.
   /// Dùng khi chỉ cần đọc một lần (không cần real-time).
   Future<MenuItem?> fetchItemById(String itemId) async {
-    final doc = await _db.collection('menu_items').doc(itemId).get();
+    final doc = await _db.collection('menu').doc(itemId).get();
     if (!doc.exists) return null;
-    return MenuItem.fromFirestore(doc);
+    return MenuItem.fromMap(doc.id, doc.data()!);
   }
 }

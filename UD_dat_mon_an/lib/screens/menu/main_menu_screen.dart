@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../../models/menu_category.dart';
-import '../../models/menu_item.dart';
+import '../../core/models/menu_data.dart';
 import '../../services/database_seeder.dart';
 import '../../services/menu_repository.dart';
 import '../../widgets/category_list_widget.dart';
 import '../../widgets/food_card_widget.dart';
 import '../../widgets/food_detail_panel.dart';
+import 'package:provider/provider.dart';
+import '../../providers/cart_provider.dart';
+import '../../widgets/cart_dialog.dart';
 
 /// ============================================================
 /// MAIN MENU SCREEN — Màn hình Thực Đơn 3 Cột
@@ -15,7 +17,8 @@ import '../../widgets/food_detail_panel.dart';
 /// Bố cục: [Cột Trái 20%] | [Cột Giữa 45%] | [Cột Phải 35%]
 /// ============================================================
 class MainMenuScreen extends StatefulWidget {
-  const MainMenuScreen({super.key});
+  final String tableInfo;
+  const MainMenuScreen({super.key, this.tableInfo = 'A-01'});
 
   @override
   State<MainMenuScreen> createState() => _MainMenuScreenState();
@@ -54,6 +57,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   /// Khi người dùng nhấn "Thêm vào giỏ hàng".
   void _onAddToCart() {
     if (_selectedItem == null) return;
+    
+    Provider.of<CartProvider>(context, listen: false).addItem(_selectedItem!);
+    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: AppColors.primary,
@@ -156,11 +162,50 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           ),
         ),
         const SizedBox(width: 8),
-        // Icon giỏ hàng (placeholder)
-        IconButton(
-          icon: const Icon(Icons.shopping_cart_outlined, color: AppColors.secondary),
-          onPressed: () {},
-          tooltip: 'Giỏ hàng',
+        // Icon giỏ hàng có Badge
+        Consumer<CartProvider>(
+          builder: (context, cart, child) {
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.shopping_cart_outlined, color: AppColors.secondary),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => CartDialog(tableInfo: widget.tableInfo),
+                    );
+                  },
+                  tooltip: 'Giỏ hàng',
+                ),
+                if (cart.totalQuantity > 0)
+                  Positioned(
+                    right: 4,
+                    top: 4,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '${cart.totalQuantity}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
         const SizedBox(width: 8),
       ],

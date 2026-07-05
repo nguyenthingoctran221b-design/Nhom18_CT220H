@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_colors.dart';
+import '../e-menu/emenu_screen.dart';
+import '../cashier/cashier_dashboard.dart';
+import '../chef/chef_dashboard.dart';
+import '../manager/manager_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,40 +14,85 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
+  final _idController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isPasswordVisible = false;
+  bool _isLoading = false;
+  String _errorMessage = '';
 
-  // Hàm xử lý đăng nhập (Logic kiểm tra điều kiện)
-  void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      String username = _usernameController.text.trim();
-      String password = _passwordController.text.trim();
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
 
-      // Giả lập kiểm tra tài khoản tương ứng với SQL Server ở trên
-      if ((username == 'admin01' && password == 'admin123') ||
-          (username == 'bep01' && password == 'bep123')) {
+    final id = _idController.text.trim();
+    final password = _passwordController.text.trim();
 
-        String role = username.startsWith('admin') ? 'Quản lý' : 'Bếp/Bar';
+    if (id.isEmpty || password.isEmpty) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Vui lòng nhập ID và Mật khẩu';
+      });
+      return;
+    }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Đăng nhập thành công với quyền $role!'),
-            backgroundColor: AppColors.primary,
-          ),
-        );
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(id).get();
 
-        // TODO: Điều hướng vào màn hình Admin hoặc Màn hình Bếp tương ứng tại đây
-      } else {
-        // Thông báo lỗi nếu sai tài khoản/mật khẩu
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tài khoản hoặc mật khẩu không chính xác!'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+      if (!doc.exists) {
+        setState(() {
+          _errorMessage = 'Tài khoản không tồn tại';
+          _isLoading = false;
+        });
+        return;
       }
+
+      final data = doc.data()!;
+      if (data['password'] != password) {
+        setState(() {
+          _errorMessage = 'Sai mật khẩu';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Đăng nhập thành công, phân luồng theo role
+      final role = data['role'] as String;
+      
+      if (!mounted) return;
+
+      Widget targetScreen;
+      switch (role) {
+        case 'customer':
+          targetScreen = EMenuScreen(tableInfo: id); // id là số bàn ví dụ A01
+          break;
+        case 'cashier':
+          targetScreen = const CashierDashboard();
+          break;
+        case 'chef':
+          targetScreen = const ChefDashboard();
+          break;
+        case 'manager':
+          targetScreen = const ManagerDashboard();
+          break;
+        default:
+          setState(() {
+            _errorMessage = 'Role không hợp lệ';
+            _isLoading = false;
+          });
+          return;
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => targetScreen),
+      );
+
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Lỗi kết nối mạng: $e';
+        _isLoading = false;
+      });
     }
   }
 
@@ -50,113 +100,75 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      // Nút back để quay lại màn hình Welcome nếu ấn nhầm
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.primary),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            width: 450, // Kích thước khung đăng nhập cố định đẹp trên màn hình ngang
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                )
-              ],
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.lock_person, size: 60, color: AppColors.primary),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "HỆ THỐNG QUẢN TRỊ",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary, letterSpacing: 1.5),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text("Dành cho Quản lý & Nhân viên Bếp", style: TextStyle(color: Colors.grey, fontSize: 14)),
-                  const SizedBox(height: 32),
-
-                  // Ô ĐĂNG NHẬP TÀI KHOẢN
-                  TextFormField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      labelText: "Tên đăng nhập",
-                      prefixIcon: const Icon(Icons.person, color: AppColors.primary),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Vui lòng nhập tên đăng nhập';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Ô NHẬP MẬT KHẨU
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: !_isPasswordVisible,
-                    decoration: InputDecoration(
-                      labelText: "Mật khẩu",
-                      prefixIcon: const Icon(Icons.lock, color: AppColors.primary),
-                      suffixIcon: IconButton(
-                        icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
-                        onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-                      ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Vui lòng nhập mật khẩu';
-                      }
-                      if (value.length < 6) {
-                        return 'Mật khẩu phải từ 6 ký tự trở lên';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 32),
-
-                  // NÚT ĐĂNG NHẬP
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _handleLogin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.secondary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text("ĐĂNG NHẬP", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
+        child: Container(
+          width: 400,
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              )
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.restaurant_menu, size: 80, color: AppColors.primary),
+              const SizedBox(height: 16),
+              const Text(
+                'SEN VÀNG INDOCHINE',
+                style: TextStyle(
+                  fontFamily: 'Playfair Display',
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
-            ),
+              const SizedBox(height: 32),
+              if (_errorMessage.isNotEmpty) ...[
+                Text(_errorMessage, style: const TextStyle(color: Colors.red)),
+                const SizedBox(height: 16),
+              ],
+              TextField(
+                controller: _idController,
+                decoration: InputDecoration(
+                  labelText: 'ID Đăng nhập (VD: A01, cashier1)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  prefixIcon: const Icon(Icons.person),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Mật khẩu',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  prefixIcon: const Icon(Icons.lock),
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('ĐĂNG NHẬP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
           ),
         ),
       ),
