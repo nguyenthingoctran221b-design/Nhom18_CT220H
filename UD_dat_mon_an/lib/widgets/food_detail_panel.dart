@@ -70,7 +70,7 @@ class _PlaceholderView extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -158,7 +158,7 @@ class _DetailView extends StatelessWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.55),
+                        Colors.black.withValues(alpha: 0.55),
                       ],
                       stops: const [0.5, 1.0],
                     ),
@@ -278,7 +278,7 @@ class _DetailView extends StatelessWidget {
                       ),
                       selected: false,
                       onSelected: (_) {},
-                      backgroundColor: AppColors.primary.withOpacity(0.07),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.07),
                       side: const BorderSide(
                           color: AppColors.primary, width: 0.8),
                       shape: RoundedRectangleBorder(

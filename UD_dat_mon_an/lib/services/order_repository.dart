@@ -15,10 +15,12 @@ class OrderRepository {
     }
   }
 
-  Stream<List<OrderModel>> watchOrders(String tableInfo) {
+
+  Stream<List<OrderModel>> watchActiveOrders(String tableInfo) {
     return _firestore
         .collection(_collectionPath)
         .where('tableInfo', isEqualTo: tableInfo)
+        .where('status', isEqualTo: 'pending')
         .snapshots()
         .map((snapshot) {
       final list = snapshot.docs.map((doc) => OrderModel.fromMap(doc.id, doc.data())).toList();

@@ -6,6 +6,12 @@ import '../cashier/cashier_dashboard.dart';
 import '../chef/chef_dashboard.dart';
 import '../manager/manager_dashboard.dart';
 
+/// Màn hình Đăng nhập (LoginScreen)
+/// Cung cấp cổng truy cập phân quyền cho mọi tác nhân vận hành trong nhà hàng bao gồm:
+/// - Khách hàng (Đăng nhập theo Bàn để truy cập E-Menu)
+/// - Thu ngân (Truy cập bảng thu ngân & thanh toán)
+/// - Đầu bếp (Truy cập bảng điều phối & chế biến món ăn)
+/// - Quản trị viên (Truy cập báo cáo doanh thu & quản lý bàn ăn/món ăn)
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -19,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String _errorMessage = '';
 
+  /// Xử lý xác thực người dùng dựa trên Firestore
   Future<void> _login() async {
     setState(() {
       _isLoading = true;
@@ -31,17 +38,18 @@ class _LoginScreenState extends State<LoginScreen> {
     if (id.isEmpty || password.isEmpty) {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Vui lòng nhập ID và Mật khẩu';
+        _errorMessage = 'Vui lòng nhập ID đăng nhập và Mật khẩu';
       });
       return;
     }
 
     try {
+      // Truy xuất tài khoản người dùng từ collection 'users' bằng ID tài khoản làm key chính
       final doc = await FirebaseFirestore.instance.collection('users').doc(id).get();
 
       if (!doc.exists) {
         setState(() {
-          _errorMessage = 'Tài khoản không tồn tại';
+          _errorMessage = 'Mã tài khoản hoặc mật khẩu không chính xác';
           _isLoading = false;
         });
         return;
@@ -50,13 +58,13 @@ class _LoginScreenState extends State<LoginScreen> {
       final data = doc.data()!;
       if (data['password'] != password) {
         setState(() {
-          _errorMessage = 'Sai mật khẩu';
+          _errorMessage = 'Mã tài khoản hoặc mật khẩu không chính xác';
           _isLoading = false;
         });
         return;
       }
 
-      // Đăng nhập thành công, phân luồng theo role
+      // Lấy vai trò (role) từ tài khoản để chuyển hướng màn hình làm việc tương ứng
       final role = data['role'] as String;
       
       if (!mounted) return;
@@ -64,25 +72,30 @@ class _LoginScreenState extends State<LoginScreen> {
       Widget targetScreen;
       switch (role) {
         case 'customer':
-          targetScreen = EMenuScreen(tableInfo: id); // id là số bàn ví dụ A01
+          // Đối với tài khoản Khách hàng, ID tài khoản chính là mã số bàn (ví dụ: A01, B02)
+          targetScreen = EMenuScreen(tableInfo: id);
           break;
         case 'cashier':
+          // Bảng điều khiển thu ngân và quản lý hóa đơn
           targetScreen = const CashierDashboard();
           break;
         case 'chef':
-          targetScreen = const ChefDashboard();
+          // Bảng điều phối món ăn dành cho nhà bếp
+          targetScreen = ChefDashboard(chefId: id);
           break;
         case 'manager':
+          // Bảng quản trị hệ thống, món ăn, bàn ăn và báo cáo kinh doanh
           targetScreen = const ManagerDashboard();
           break;
         default:
           setState(() {
-            _errorMessage = 'Role không hợp lệ';
+            _errorMessage = 'Vai trò người dùng không hợp lệ trên hệ thống';
             _isLoading = false;
           });
           return;
       }
 
+      // Tiến hành chuyển hướng, loại bỏ màn hình đăng nhập khỏi ngăn xếp điều hướng
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => targetScreen),
@@ -90,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     } catch (e) {
       setState(() {
-        _errorMessage = 'Lỗi kết nối mạng: $e';
+        _errorMessage = 'Không thể kết nối đến máy chủ Firestore: $e';
         _isLoading = false;
       });
     }
@@ -109,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               )
@@ -121,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const Icon(Icons.restaurant_menu, size: 80, color: AppColors.primary),
               const SizedBox(height: 16),
               const Text(
-                'SEN VÀNG INDOCHINE',
+                'HỆ THỐNG VẬN HÀNH POS',
                 style: TextStyle(
                   fontFamily: 'Playfair Display',
                   fontSize: 24,
@@ -129,15 +142,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: AppColors.primary,
                 ),
               ),
+              const SizedBox(height: 6),
+              const Text(
+                'Quầy Thu ngân | Nhà bếp | Báo cáo Quản trị',
+                style: TextStyle(fontSize: 13, color: Colors.grey),
+              ),
               const SizedBox(height: 32),
               if (_errorMessage.isNotEmpty) ...[
-                Text(_errorMessage, style: const TextStyle(color: Colors.red)),
+                Text(_errorMessage, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
               ],
               TextField(
                 controller: _idController,
                 decoration: InputDecoration(
-                  labelText: 'ID Đăng nhập (VD: A01, cashier1)',
+                  labelText: 'Mã tài khoản (VD: cashier1, chef1, admin)',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   prefixIcon: const Icon(Icons.person),
                 ),
@@ -147,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
-                  labelText: 'Mật khẩu',
+                  labelText: 'Mật khẩu truy cập',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   prefixIcon: const Icon(Icons.lock),
                 ),
@@ -165,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('ĐĂNG NHẬP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      : const Text('ĐĂNG NHẬP VẬN HÀNH', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

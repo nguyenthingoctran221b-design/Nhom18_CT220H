@@ -7,8 +7,13 @@ import '../../providers/cart_provider.dart';
 import '../../widgets/cart_view_widget.dart';
 import '../../widgets/order_history_widget.dart';
 
-/// Màn hình E-Menu chính — bố cục landscape cho iPad
-/// Gồm: Top Nav Bar, Left Category Sidebar, Center Food Grid, Right Detail Panel
+/// Màn hình Thực đơn Điện tử (EMenuScreen)
+/// Phục vụ cho khách hàng trực tiếp tại bàn bằng máy tính bảng (iPad/Tablet).
+/// Giao diện thiết kế theo tỷ lệ Landscape chuyên nghiệp, chia các phân khu trực quan:
+/// - 1. Top Navigation Bar: Logo nhà hàng, số bàn hiện tại, chọn Tab làm việc, gọi phục vụ nhanh.
+/// - 2. Left Category Sidebar: Bộ lọc phân loại thực đơn (Lẩu, đồ nhúng, khai vị, nước uống).
+/// - 3. Center Food Grid: Lưới hiển thị danh sách món ăn sinh động có ảnh minh họa.
+/// - 4. Right Detail Panel: Bảng chi tiết món ăn (thành phần, TFP chuẩn bị, tùy chỉnh số lượng) khi khách nhấp chọn.
 class EMenuScreen extends StatefulWidget {
   final String tableInfo;
 
@@ -19,10 +24,10 @@ class EMenuScreen extends StatefulWidget {
 }
 
 class _EMenuScreenState extends State<EMenuScreen> {
-  int _activeCategoryIdx = 1; // Default: Đồ Nhúng Lẩu
-  MenuItem? _selectedItem;
-  int _quantity = 1;
-  int _activeTab = 0; // 0: Thực đơn, 1: Giỏ hàng, 2: Lịch sử
+  int _activeCategoryIdx = 1; // Mặc định hiển thị danh mục Đồ Nhúng Lẩu (Index 1)
+  MenuItem? _selectedItem; // Món ăn đang được nhấp chọn xem chi tiết
+  int _quantity = 1; // Số lượng món đang chọn để thêm vào giỏ hàng
+  int _activeTab = 0; // Tab hiển thị chính (0: Thực đơn, 1: Giỏ hàng, 2: Lịch sử gọi món của phiên này)
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -171,7 +176,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -188,7 +193,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
                     color: AppColors.primary, size: 24),
                 const SizedBox(width: 8),
                 Text(
-                  'Sen Vàng Food',
+                  'Sen Vàng Indochine',
                   style: TextStyle(
                     fontFamily: 'Playfair Display',
                     fontWeight: FontWeight.bold,
@@ -204,7 +209,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -341,7 +346,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(2, 0),
           ),
@@ -362,7 +367,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
             },
             child: Container(
               color: isSelected
-                  ? AppColors.primary.withOpacity(0.05)
+                  ? AppColors.primary.withValues(alpha: 0.05)
                   : Colors.transparent,
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Column(
@@ -517,7 +522,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
           border: Border.all(color: Colors.grey[100]!),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -559,7 +564,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
                       // Overlay "Hết món"
                       if (!item.isAvailable)
                         Container(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           child: Center(
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -633,7 +638,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.secondary.withOpacity(0.4),
+                        color: AppColors.secondary.withValues(alpha: 0.4),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -659,7 +664,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(-10, 0),
           ),
@@ -691,7 +696,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.5),
+                          Colors.black.withValues(alpha: 0.5),
                         ],
                       ),
                     ),
@@ -706,7 +711,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.4),
+                        color: Colors.black.withValues(alpha: 0.4),
                         shape: BoxShape.circle,
                       ),
                       child:
@@ -882,7 +887,7 @@ class _EMenuScreenState extends State<EMenuScreen> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                       elevation: 4,
-                      shadowColor: AppColors.primary.withOpacity(0.3),
+                      shadowColor: AppColors.primary.withValues(alpha: 0.3),
                     ),
                   ),
                 ),

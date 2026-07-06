@@ -40,7 +40,7 @@ class CategoryListWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
             ),
             child: const Column(
               children: [
@@ -108,7 +108,7 @@ class _CategoryTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: isSelected
-            ? AppColors.secondary.withOpacity(0.25)
+            ? AppColors.secondary.withValues(alpha: 0.25)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
         border: isSelected

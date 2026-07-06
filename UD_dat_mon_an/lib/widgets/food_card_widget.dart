@@ -36,8 +36,8 @@ class FoodCardWidget extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: isSelected
-                ? AppColors.secondary.withOpacity(0.25)
-                : Colors.black.withOpacity(0.07),
+                ? AppColors.secondary.withValues(alpha: 0.25)
+                : Colors.black.withValues(alpha: 0.07),
             blurRadius: isSelected ? 12 : 6,
             offset: const Offset(0, 3),
           ),

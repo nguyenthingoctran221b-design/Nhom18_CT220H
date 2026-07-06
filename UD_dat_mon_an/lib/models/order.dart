@@ -9,6 +9,8 @@ class OrderItem {
   final double total;
   final int tfp;
   final String status; // 'pending', 'cooking', 'done'
+  final DateTime? acceptedAt;
+  final String? chefId;
 
   OrderItem({
     required this.id,
@@ -18,6 +20,8 @@ class OrderItem {
     required this.total,
     this.tfp = 10,
     this.status = 'pending',
+    this.acceptedAt,
+    this.chefId,
   });
 
   factory OrderItem.fromMap(Map<String, dynamic> map) {
@@ -29,6 +33,8 @@ class OrderItem {
       total: map['total']?.toDouble() ?? 0.0,
       tfp: map['tfp']?.toInt() ?? 10,
       status: map['status'] ?? 'pending',
+      acceptedAt: (map['acceptedAt'] as Timestamp?)?.toDate(),
+      chefId: map['chefId'],
     );
   }
 }
@@ -55,15 +61,27 @@ class OrderModel {
   Map<String, dynamic> toMap() {
     return {
       'tableInfo': tableInfo,
-      'items': cartItems.map((cartItem) => {
-        'id': cartItem.item.id,
-        'name': cartItem.item.name,
-        'price': cartItem.item.price,
-        'quantity': cartItem.quantity,
-        'total': cartItem.totalPrice,
-        'tfp': cartItem.item.tfp,
-        'status': 'pending',
-      }).toList(),
+      'items': orderItems != null
+          ? orderItems!.map((item) => {
+              'id': item.id,
+              'name': item.name,
+              'price': item.price,
+              'quantity': item.quantity,
+              'total': item.total,
+              'tfp': item.tfp,
+              'status': item.status,
+              'acceptedAt': item.acceptedAt != null ? Timestamp.fromDate(item.acceptedAt!) : null,
+              'chefId': item.chefId,
+            }).toList()
+          : cartItems.map((cartItem) => {
+              'id': cartItem.item.id,
+              'name': cartItem.item.name,
+              'price': cartItem.item.price,
+              'quantity': cartItem.quantity,
+              'total': cartItem.totalPrice,
+              'tfp': cartItem.item.tfp,
+              'status': 'pending',
+            }).toList(),
       'totalAmount': totalAmount,
       'createdAt': Timestamp.fromDate(createdAt),
       'status': status,

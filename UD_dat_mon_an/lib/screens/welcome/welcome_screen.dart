@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../e-menu/emenu_screen.dart';
-// import '../auth/login_screen.dart';
-// import '../menu/main_menu_screen.dart';
 
+/// Màn hình Chào mừng (WelcomeScreen)
+/// Phục vụ như giao diện chờ chính của thiết bị E-Menu đặt tại mỗi bàn ăn.
+/// Người dùng (khách hàng hoặc nhân viên phục vụ) có thể nhấn nút "KHỞI ĐỘNG E-MENU" để chọn số bàn
+/// và bắt đầu phiên gọi món ăn.
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -12,6 +14,9 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
+  
+  /// Hộp thoại chọn Bàn & Khu vực
+  /// Cho phép thiết lập số bàn của thiết bị (ví dụ: A-01, B-05, C-12)
   void _showTableSelectionDialog() {
     String selectedArea = 'A';
     String selectedTable = '01';
@@ -23,8 +28,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               title: const Text(
-                'Chọn Bàn',
+                'Thiết Lập Số Bàn Thiết Bị',
                 style: TextStyle(
                   fontFamily: 'Playfair Display',
                   fontWeight: FontWeight.bold,
@@ -84,7 +90,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(context); // Đóng dialog
+                    // Chuyển sang màn hình E-Menu gọi món dành cho khách hàng với số bàn tương ứng
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -95,6 +102,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                   child: const Text('Xác nhận'),
                 ),
@@ -111,17 +119,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background trang trí nhẹ
+          // Màu nền Indochine thanh lịch
           Container(color: AppColors.background),
 
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // LOGO + NÚT ẨN
+                // LOGO nhà hàng tích hợp cử chỉ nhấn đúp để truy cập thử nghiệm nhanh
                 GestureDetector(
                   onDoubleTap: () {
-                    // Chuyển sang trang E-Menu với bàn mặc định
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (_) => const EMenuScreen(tableInfo: 'A-01')),
@@ -137,7 +144,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           )
@@ -149,7 +156,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // TÊN NHÀ HÀNG
+                // Tên nhà hàng
                 const Text(
                   "SEN VÀNG INDOCHINE",
                   style: TextStyle(
@@ -161,7 +168,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // DÒNG CHÀO MỪNG
+                // Slogan chào mừng
                 const Text(
                   "Chào mừng bạn đến với không gian ẩm thực truyền thống",
                   style: TextStyle(
@@ -172,7 +179,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ),
                 const SizedBox(height: 60),
 
-                // NÚT BẮT ĐẦU ĐẶT MÓN
+                // Nút bắt đầu gọi món
                 SizedBox(
                   width: 300,
                   height: 60,
@@ -187,8 +194,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       elevation: 5,
                     ),
                     child: const Text(
-                      "BẮT ĐẦU ĐẶT MÓN",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      "KHỞI ĐỘNG E-MENU GỌI MÓN",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -196,13 +203,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
           ),
 
-          // Version info
+          // Thông tin phiên bản hệ thống dưới chân trang
           const Positioned(
             bottom: 20,
             left: 0,
             right: 0,
             child: Center(
-              child: Text("v1.0.0 - Smart E-Menu System", style: TextStyle(color: Colors.grey)),
+              child: Text(
+                "Hệ Thống Phục Vụ & Gọi Món Thông Minh E-Menu - v1.0.0",
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+              ),
             ),
           )
         ],
@@ -210,4 +220,3 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 }
-

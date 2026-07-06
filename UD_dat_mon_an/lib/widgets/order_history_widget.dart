@@ -38,7 +38,7 @@ class OrderHistoryWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -58,7 +58,7 @@ class OrderHistoryWidget extends StatelessWidget {
           // Orders Stream
           Expanded(
             child: StreamBuilder<List<OrderModel>>(
-              stream: repo.watchOrders(tableInfo),
+              stream: repo.watchActiveOrders(tableInfo),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator(color: AppColors.primary));

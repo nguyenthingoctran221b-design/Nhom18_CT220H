@@ -5,7 +5,12 @@ import '../../models/order.dart';
 import 'package:intl/intl.dart';
 
 class PdfInvoiceHelper {
-  static Future<void> generateAndPrintInvoice(List<OrderModel> orders, String tableInfo) async {
+  static Future<void> generateAndPrintInvoice(
+    List<OrderModel> orders,
+    String tableInfo, {
+    List<OrderItem>? overrideItems,
+    double? overrideTotal,
+  }) async {
     final pdf = pw.Document();
 
     // Lấy font hỗ trợ tiếng Việt
@@ -13,13 +18,18 @@ class PdfInvoiceHelper {
     final fontBold = await PdfGoogleFonts.robotoBold();
 
     // Tính tổng tất cả các đơn
-    double grandTotal = 0;
-    final allItems = <OrderItem>[];
+    double grandTotal = overrideTotal ?? 0;
+    final allItems = overrideItems ?? <OrderItem>[];
     
-    for (var order in orders) {
-      if (order.orderItems != null) {
-        allItems.addAll(order.orderItems!);
-        grandTotal += order.totalAmount;
+    if (overrideItems == null) {
+      for (var order in orders) {
+        if (order.orderItems != null) {
+          final doneItems = order.orderItems!.where((item) => item.status == 'done').toList();
+          allItems.addAll(doneItems);
+          for (var item in doneItems) {
+            grandTotal += item.total;
+          }
+        }
       }
     }
 
