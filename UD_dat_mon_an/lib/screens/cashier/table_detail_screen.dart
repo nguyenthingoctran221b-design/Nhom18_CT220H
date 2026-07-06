@@ -30,7 +30,7 @@ class _TableDetailScreenState extends State<TableDetailScreen> {
     await FirebaseFirestore.instance.collection('tables').doc(widget.table.id).update({
       'status': status,
       if (status == 'occupied') 'entryTime': FieldValue.serverTimestamp(),
-      if (status == 'empty') 'entryTime': null,
+      if (status == 'empty' || status == 'locked' || status == 'booked') 'entryTime': null,
     });
     if (mounted) Navigator.pop(context);
   }
@@ -383,11 +383,20 @@ class _TableDetailScreenState extends State<TableDetailScreen> {
                           label: const Text('Đặt trước bàn'),
                           style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16), backgroundColor: Colors.orange),
                         ),
+                      if (widget.table.status == 'empty')
+                        const SizedBox(height: 16),
+                      if (widget.table.status == 'empty')
+                        ElevatedButton.icon(
+                          onPressed: () => _updateTableStatus('locked'),
+                          icon: const Icon(Icons.lock),
+                          label: const Text('Khóa / Sửa chữa'),
+                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16), backgroundColor: Colors.amber.shade700),
+                        ),
                       if (widget.table.status != 'empty')
                         ElevatedButton.icon(
                           onPressed: () => _updateTableStatus('empty'),
                           icon: const Icon(Icons.clear),
-                          label: const Text('Hủy bàn / Trống'),
+                          label: Text(widget.table.status == 'locked' ? 'Mở khóa / Trống' : 'Hủy bàn / Trống'),
                           style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16), backgroundColor: Colors.grey),
                         ),
 

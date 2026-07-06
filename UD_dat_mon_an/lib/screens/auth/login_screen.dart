@@ -134,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const Icon(Icons.restaurant_menu, size: 80, color: AppColors.primary),
               const SizedBox(height: 16),
               const Text(
-                'HỆ THỐNG VẬN HÀNH POS',
+                'HỆ THỐNG VẬN HÀNH',
                 style: TextStyle(
                   fontFamily: 'Playfair Display',
                   fontSize: 24,
@@ -144,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Quầy Thu ngân | Nhà bếp | Báo cáo Quản trị',
+                'Chào mừng bạn đến với hệ thống vận hành',
                 style: TextStyle(fontSize: 13, color: Colors.grey),
               ),
               const SizedBox(height: 32),
@@ -155,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _idController,
                 decoration: InputDecoration(
-                  labelText: 'Mã tài khoản (VD: cashier1, chef1, admin)',
+                  labelText: 'Tài khoản',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   prefixIcon: const Icon(Icons.person),
                 ),
@@ -165,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
-                  labelText: 'Mật khẩu truy cập',
+                  labelText: 'Mật khẩu',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   prefixIcon: const Icon(Icons.lock),
                 ),
@@ -183,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('ĐĂNG NHẬP VẬN HÀNH', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      : const Text('ĐĂNG NHẬP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

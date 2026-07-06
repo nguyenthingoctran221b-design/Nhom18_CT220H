@@ -243,6 +243,12 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                     groupValue: selectedStatus,
                     onChanged: (val) => setDialogState(() => selectedStatus = val!),
                   ),
+                  RadioListTile<String>(
+                    title: const Text('Khóa / Sửa chữa (Màu vàng)'),
+                    value: 'locked',
+                    groupValue: selectedStatus,
+                    onChanged: (val) => setDialogState(() => selectedStatus = val!),
+                  ),
                 ],
               ),
               actions: [
@@ -256,7 +262,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                     final Map<String, dynamic> updates = {'status': selectedStatus};
                     if (selectedStatus == 'occupied') {
                       updates['entryTime'] = FieldValue.serverTimestamp();
-                    } else if (selectedStatus == 'empty') {
+                    } else {
                       updates['entryTime'] = null;
                     }
 
@@ -948,6 +954,9 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                       } else if (table.status == 'booked') {
                         color = Colors.orange.shade400;
                         statusText = 'Đã đặt';
+                      } else if (table.status == 'locked') {
+                        color = Colors.amber.shade700;
+                        statusText = 'Khóa/Sửa chữa';
                       } else {
                         color = Colors.green.shade400;
                         statusText = 'Trống';

@@ -79,6 +79,7 @@ class _CashierDashboardState extends State<CashierDashboard> {
     // - Trống (empty): Màu xanh lá cây
     // - Đang ăn (occupied): Màu đỏ
     // - Được đặt trước (booked): Màu cam
+    // - Khóa/Sửa chữa (locked): Màu vàng
     switch (table.status) {
       case 'occupied':
         bgColor = Colors.red.shade400;
@@ -87,6 +88,10 @@ class _CashierDashboardState extends State<CashierDashboard> {
       case 'booked':
         bgColor = Colors.orange.shade400;
         statusText = 'Đã đặt';
+        break;
+      case 'locked':
+        bgColor = Colors.amber.shade700;
+        statusText = 'Khóa/Sửa chữa';
         break;
       default:
         bgColor = Colors.green.shade400;

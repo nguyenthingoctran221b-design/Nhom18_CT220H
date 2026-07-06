@@ -325,7 +325,7 @@ class _ChefDashboardState extends State<ChefDashboard> {
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('Hệ Thống Phân Khu Chế Biến - Bếp/Bar', style: TextStyle(fontFamily: 'Playfair Display', fontWeight: FontWeight.bold)),
+          title: const Text('Hệ Thống Phân Khu Chế Biến', style: TextStyle(fontFamily: 'Playfair Display', fontWeight: FontWeight.bold)),
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           actions: [
@@ -350,7 +350,7 @@ class _ChefDashboardState extends State<ChefDashboard> {
         appBar: AppBar(
           title: Row(
             children: [
-              Text('Hệ Thống Bếp & Bar (${widget.chefId})', style: const TextStyle(fontFamily: 'Playfair Display', fontWeight: FontWeight.bold)),
+              Text('Hệ Thống Phân Khu Chế Biến (${widget.chefId})', style: const TextStyle(fontFamily: 'Playfair Display', fontWeight: FontWeight.bold)),
               const SizedBox(width: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
