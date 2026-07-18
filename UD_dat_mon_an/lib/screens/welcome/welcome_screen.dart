@@ -122,39 +122,44 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           // Màu nền Indochine thanh lịch
           Container(color: AppColors.background),
 
+          // Nút cài đặt / đăng nhập nhân viên
+          Positioned(
+            top: 20,
+            right: 20,
+            child: IconButton(
+              icon: const Icon(Icons.settings, color: AppColors.primary, size: 28),
+              tooltip: 'Đăng nhập nhân viên',
+              onPressed: () {
+                Navigator.pushNamed(context, '/login');
+              },
+            ),
+          ),
+
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // LOGO nhà hàng tích hợp cử chỉ nhấn đúp để truy cập thử nghiệm nhanh
-                GestureDetector(
-                  onDoubleTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const EMenuScreen(tableInfo: 'A-01')),
-                    );
-                  },
-                  child: Hero(
-                    tag: 'logo',
-                    child: Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          )
-                        ],
-                      ),
-                      child: const Icon(Icons.restaurant_menu, size: 80, color: AppColors.primary),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 30),
+                 // LOGO nhà hàng
+                 Hero(
+                   tag: 'logo',
+                   child: Container(
+                     width: 180,
+                     height: 180,
+                     decoration: BoxDecoration(
+                       color: Colors.white,
+                       shape: BoxShape.circle,
+                       boxShadow: [
+                         BoxShadow(
+                           color: Colors.black.withValues(alpha: 0.1),
+                           blurRadius: 20,
+                           offset: const Offset(0, 10),
+                         )
+                       ],
+                     ),
+                     child: const Icon(Icons.restaurant_menu, size: 80, color: AppColors.primary),
+                   ),
+                 ),
+                 const SizedBox(height: 30),
 
                 // Tên nhà hàng
                 const Text(

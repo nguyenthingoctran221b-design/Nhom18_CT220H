@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'core/constants/app_colors.dart';
+import 'screens/welcome/welcome_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'core/utils/dummy_data_generator.dart';
 
@@ -58,7 +59,11 @@ class SmartEMenuApp extends StatelessWidget {
           bodyLarge: TextStyle(color: AppColors.text),
         ),
       ),
-      home: const LoginScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const WelcomeScreen(),
+        '/login': (context) => const LoginScreen(),
+      },
     );
   }
 }

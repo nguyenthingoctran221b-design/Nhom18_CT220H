@@ -50,13 +50,13 @@ class OrderModel {
 
   OrderModel({
     this.id,
-    required this.tableInfo,
+    required String tableInfo,
     this.cartItems = const [],
     this.orderItems,
     required this.totalAmount,
     required this.createdAt,
     this.status = 'pending',
-  });
+  }) : tableInfo = tableInfo.replaceAll('-', '');
 
   Map<String, dynamic> toMap() {
     return {

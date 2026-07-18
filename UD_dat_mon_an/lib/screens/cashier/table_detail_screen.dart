@@ -202,7 +202,12 @@ class _TableDetailScreenState extends State<TableDetailScreen> {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('orders')
-            .where('tableInfo', isEqualTo: widget.table.id)
+            .where('tableInfo', whereIn: [
+              widget.table.id,
+              widget.table.id.replaceAll('-', ''),
+              if (widget.table.id.replaceAll('-', '').length >= 2)
+                '${widget.table.id.replaceAll('-', '').substring(0, 1)}-${widget.table.id.replaceAll('-', '').substring(1)}'
+            ].toSet().toList())
             .where('status', isEqualTo: 'pending')
             .snapshots(),
         builder: (context, snapshot) {
@@ -212,6 +217,8 @@ class _TableDetailScreenState extends State<TableDetailScreen> {
 
           final orders = snapshot.data?.docs.map((doc) => OrderModel.fromMap(doc.id, doc.data() as Map<String, dynamic>)).toList() ?? [];
           orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          
+          final bool isOccupied = widget.table.status == 'occupied' || orders.isNotEmpty;
 
           final List<OrderItem> doneItems = [];
           final List<OrderItem> nonDoneItems = [];
@@ -369,35 +376,47 @@ class _TableDetailScreenState extends State<TableDetailScreen> {
                       // Status controls
                       if (widget.table.status == 'empty')
                         ElevatedButton.icon(
-                          onPressed: () => _updateTableStatus('occupied'),
+                          onPressed: isOccupied ? null : () => _updateTableStatus('occupied'),
                           icon: const Icon(Icons.person_add),
                           label: const Text('Mở bàn (Khách vào)'),
-                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.all(16),
+                            backgroundColor: isOccupied ? Colors.grey.shade300 : null,
+                          ),
                         ),
                       if (widget.table.status == 'empty')
                         const SizedBox(height: 16),
                       if (widget.table.status == 'empty')
                         ElevatedButton.icon(
-                          onPressed: () => _updateTableStatus('booked'),
+                          onPressed: isOccupied ? null : () => _updateTableStatus('booked'),
                           icon: const Icon(Icons.book_online),
                           label: const Text('Đặt trước bàn'),
-                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16), backgroundColor: Colors.orange),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.all(16), 
+                            backgroundColor: isOccupied ? Colors.grey.shade300 : Colors.orange,
+                          ),
                         ),
                       if (widget.table.status == 'empty')
                         const SizedBox(height: 16),
                       if (widget.table.status == 'empty')
                         ElevatedButton.icon(
-                          onPressed: () => _updateTableStatus('locked'),
+                          onPressed: isOccupied ? null : () => _updateTableStatus('locked'),
                           icon: const Icon(Icons.lock),
                           label: const Text('Khóa / Sửa chữa'),
-                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16), backgroundColor: Colors.amber.shade700),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.all(16), 
+                            backgroundColor: isOccupied ? Colors.grey.shade300 : Colors.amber.shade700,
+                          ),
                         ),
                       if (widget.table.status != 'empty')
                         ElevatedButton.icon(
-                          onPressed: () => _updateTableStatus('empty'),
+                          onPressed: isOccupied ? null : () => _updateTableStatus('empty'),
                           icon: const Icon(Icons.clear),
                           label: Text(widget.table.status == 'locked' ? 'Mở khóa / Trống' : 'Hủy bàn / Trống'),
-                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16), backgroundColor: Colors.grey),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.all(16), 
+                            backgroundColor: isOccupied ? Colors.grey.shade300 : Colors.grey,
+                          ),
                         ),
 
                       const Spacer(),

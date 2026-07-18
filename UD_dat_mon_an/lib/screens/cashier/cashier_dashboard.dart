@@ -21,7 +21,7 @@ class _CashierDashboardState extends State<CashierDashboard> {
   int _selectedIndex = 0; // Trạng thái tab đang chọn (0: Quản lý Bàn, 1: Quản lý Hóa đơn)
 
   /// Xây dựng lưới danh sách bàn ăn theo từng phân khu
-  Widget _buildTableGridSection(List<TableModel> tables) {
+  Widget _buildTableGridSection(List<TableModel> tables, Set<String> occupiedTableIds) {
     final areaA = tables.where((t) => t.area == 'A').toList();
     final areaB = tables.where((t) => t.area == 'B').toList();
     final areaC = tables.where((t) => t.area == 'C').toList();
@@ -29,17 +29,17 @@ class _CashierDashboardState extends State<CashierDashboard> {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        _buildAreaSection('Khu vực A', areaA),
+        _buildAreaSection('Khu vực A', areaA, occupiedTableIds),
         const SizedBox(height: 32),
-        _buildAreaSection('Khu vực B', areaB),
+        _buildAreaSection('Khu vực B', areaB, occupiedTableIds),
         const SizedBox(height: 32),
-        _buildAreaSection('Khu vực C', areaC),
+        _buildAreaSection('Khu vực C', areaC, occupiedTableIds),
       ],
     );
   }
 
   /// Xây dựng tiêu đề khu vực kèm Grid lưới bàn tương ứng
-  Widget _buildAreaSection(String title, List<TableModel> tables) {
+  Widget _buildAreaSection(String title, List<TableModel> tables, Set<String> occupiedTableIds) {
     if (tables.isEmpty) return const SizedBox();
 
     return Column(
@@ -62,7 +62,7 @@ class _CashierDashboardState extends State<CashierDashboard> {
           itemCount: tables.length,
           itemBuilder: (context, index) {
             final table = tables[index];
-            return _buildTableCard(table);
+            return _buildTableCard(table, occupiedTableIds);
           },
         ),
       ],
@@ -70,17 +70,21 @@ class _CashierDashboardState extends State<CashierDashboard> {
   }
 
   /// Thiết kế thẻ (Card) hiển thị thông tin bàn ăn động theo trạng thái hoạt động
-  Widget _buildTableCard(TableModel table) {
+  Widget _buildTableCard(TableModel table, Set<String> occupiedTableIds) {
     Color bgColor;
     Color textColor = Colors.white;
     String statusText;
 
-    // Phân loại màu sắc thẻ bàn theo trạng thái Firestore:
+    // Determine status: if there are unpaid orders, mark as occupied
+    final bool hasPendingOrders = occupiedTableIds.contains(table.id.replaceAll('-', ''));
+    final String currentStatus = hasPendingOrders ? 'occupied' : table.status;
+
+    // Phân loại màu sắc thẻ bàn theo trạng thái:
     // - Trống (empty): Màu xanh lá cây
     // - Đang ăn (occupied): Màu đỏ
     // - Được đặt trước (booked): Màu cam
     // - Khóa/Sửa chữa (locked): Màu vàng
-    switch (table.status) {
+    switch (currentStatus) {
       case 'occupied':
         bgColor = Colors.red.shade400;
         statusText = 'Có khách';
@@ -133,7 +137,7 @@ class _CashierDashboardState extends State<CashierDashboard> {
               style: TextStyle(fontSize: 14, color: textColor),
             ),
             // Nếu bàn có khách, hiển thị thêm thông tin giờ khách bắt đầu vào bàn
-            if (table.status == 'occupied' && table.entryTime != null)
+            if (currentStatus == 'occupied' && table.entryTime != null)
               Text(
                 'Vào: ${table.entryTime!.hour}:${table.entryTime!.minute.toString().padLeft(2, '0')}',
                 style: TextStyle(fontSize: 12, color: textColor.withValues(alpha: 0.8)),
@@ -149,88 +153,108 @@ class _CashierDashboardState extends State<CashierDashboard> {
     // Sử dụng StreamBuilder để lắng nghe liên tục danh sách bàn từ Firestore (real-time sync)
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('tables').snapshots(),
-      builder: (context, snapshot) {
+      builder: (context, tablesSnapshot) {
         final List<TableModel> tables = [];
-        if (snapshot.hasData) {
-          for (var doc in snapshot.data!.docs) {
+        if (tablesSnapshot.hasData) {
+          for (var doc in tablesSnapshot.data!.docs) {
             tables.add(TableModel.fromMap(doc.id, doc.data() as Map<String, dynamic>));
           }
           tables.sort((a, b) => a.id.compareTo(b.id));
         }
 
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          appBar: AppBar(
-            title: const Text('Quầy Thu Ngân & Điều Phối Bàn Ăn', style: TextStyle(fontFamily: 'Playfair Display', fontWeight: FontWeight.bold)),
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            actions: [
-              // Nút làm mới dữ liệu để cập nhật/vẽ lại giao diện tức thì
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                tooltip: 'Làm mới dữ liệu',
-                onPressed: () {
-                  setState(() {});
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã cập nhật dữ liệu bàn mới nhất.'), duration: Duration(milliseconds: 850)),
-                  );
-                },
+        // Lắng nghe thêm danh sách các order chưa thanh toán (status == 'pending')
+        return StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('orders')
+              .where('status', isEqualTo: 'pending')
+              .snapshots(),
+          builder: (context, ordersSnapshot) {
+            final Set<String> occupiedTableIds = {};
+            if (ordersSnapshot.hasData) {
+              for (var doc in ordersSnapshot.data!.docs) {
+                final data = doc.data() as Map<String, dynamic>;
+                final tableInfo = data['tableInfo'] as String?;
+                if (tableInfo != null) {
+                  occupiedTableIds.add(tableInfo.replaceAll('-', ''));
+                }
+              }
+            }
+
+            return Scaffold(
+              backgroundColor: AppColors.background,
+              appBar: AppBar(
+                title: const Text('Quầy Thu Ngân & Điều Phối Bàn Ăn', style: TextStyle(fontFamily: 'Playfair Display', fontWeight: FontWeight.bold)),
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                actions: [
+                  // Nút làm mới dữ liệu để cập nhật/vẽ lại giao diện tức thì
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Làm mới dữ liệu',
+                    onPressed: () {
+                      setState(() {});
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Đã cập nhật dữ liệu bàn mới nhất.'), duration: Duration(milliseconds: 850)),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.logout),
+                    tooltip: 'Đăng xuất',
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/'); 
+                    },
+                  ),
+                ],
               ),
-              IconButton(
-                icon: const Icon(Icons.logout),
-                tooltip: 'Đăng xuất',
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/'); 
-                },
-              ),
-            ],
-          ),
-          body: Row(
-            children: [
-              // 1. Sidebar điều hướng bên trái (Navigation Sidebar)
-              Container(
-                width: 250,
-                color: Colors.white,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 32),
-                    const Icon(Icons.point_of_sale, size: 80, color: AppColors.primary),
-                    const SizedBox(height: 16),
-                    const Text('Quầy Thu Ngân', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 32),
-                    
-                    ListTile(
-                      leading: const Icon(Icons.table_restaurant),
-                      title: const Text('Quản lý Bàn'),
-                      selected: _selectedIndex == 0,
-                      selectedTileColor: AppColors.primary.withValues(alpha: 0.1),
-                      selectedColor: AppColors.primary,
-                      onTap: () => setState(() => _selectedIndex = 0),
+              body: Row(
+                children: [
+                  // 1. Sidebar điều hướng bên trái (Navigation Sidebar)
+                  Container(
+                    width: 250,
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 32),
+                        const Icon(Icons.point_of_sale, size: 80, color: AppColors.primary),
+                        const SizedBox(height: 16),
+                        const Text('Quầy Thu Ngân', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 32),
+                        
+                        ListTile(
+                          leading: const Icon(Icons.table_restaurant),
+                          title: const Text('Quản lý Bàn'),
+                          selected: _selectedIndex == 0,
+                          selectedTileColor: AppColors.primary.withValues(alpha: 0.1),
+                          selectedColor: AppColors.primary,
+                          onTap: () => setState(() => _selectedIndex = 0),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.receipt_long),
+                          title: const Text('Quản lý Hóa đơn'),
+                          selected: _selectedIndex == 1,
+                          selectedTileColor: AppColors.primary.withValues(alpha: 0.1),
+                          selectedColor: AppColors.primary,
+                          onTap: () => setState(() => _selectedIndex = 1),
+                        ),
+                      ],
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.receipt_long),
-                      title: const Text('Quản lý Hóa đơn'),
-                      selected: _selectedIndex == 1,
-                      selectedTileColor: AppColors.primary.withValues(alpha: 0.1),
-                      selectedColor: AppColors.primary,
-                      onTap: () => setState(() => _selectedIndex = 1),
-                    ),
-                  ],
-                ),
+                  ),
+                  
+                  // 2. Vùng hiển thị nội dung bên phải (Right Content Workspace)
+                  Expanded(
+                    child: _selectedIndex == 1
+                        ? const CashierHistoryScreen(embedMode: true) // Nhúng màn hình lịch sử hóa đơn ở chế độ không appBar
+                        : tablesSnapshot.connectionState == ConnectionState.waiting
+                            ? const Center(child: CircularProgressIndicator())
+                            : tables.isEmpty
+                                ? const Center(child: Text('Chưa có dữ liệu bàn.'))
+                                : _buildTableGridSection(tables, occupiedTableIds),
+                  ),
+                ],
               ),
-              
-              // 2. Vùng hiển thị nội dung bên phải (Right Content Workspace)
-              Expanded(
-                child: _selectedIndex == 1
-                    ? const CashierHistoryScreen(embedMode: true) // Nhúng màn hình lịch sử hóa đơn ở chế độ không appBar
-                    : snapshot.connectionState == ConnectionState.waiting
-                        ? const Center(child: CircularProgressIndicator())
-                        : tables.isEmpty
-                            ? const Center(child: Text('Chưa có dữ liệu bàn.'))
-                            : _buildTableGridSection(tables),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );

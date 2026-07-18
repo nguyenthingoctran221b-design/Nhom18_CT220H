@@ -96,6 +96,50 @@ class _EMenuScreenState extends State<EMenuScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _updateTableStatusToOccupied();
+  }
+
+  Future<void> _updateTableStatusToOccupied() async {
+    try {
+      final normalizedId = widget.tableInfo.replaceAll('-', '');
+      final tableRef = FirebaseFirestore.instance.collection('tables').doc(normalizedId);
+      
+      final doc = await tableRef.get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        final currentStatus = data['status'] ?? 'empty';
+        if (currentStatus != 'occupied') {
+          await tableRef.update({
+            'status': 'occupied',
+            'entryTime': FieldValue.serverTimestamp(),
+          });
+        }
+      } else {
+        String area = 'A';
+        int number = 1;
+        if (widget.tableInfo.contains('-')) {
+          final parts = widget.tableInfo.split('-');
+          area = parts.first;
+          number = int.tryParse(parts.last) ?? 1;
+        } else if (widget.tableInfo.length >= 2) {
+          area = widget.tableInfo.substring(0, 1);
+          number = int.tryParse(widget.tableInfo.substring(1)) ?? 1;
+        }
+        await tableRef.set({
+          'area': area,
+          'number': number,
+          'status': 'occupied',
+          'entryTime': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      debugPrint('Error updating table status to occupied: $e');
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
