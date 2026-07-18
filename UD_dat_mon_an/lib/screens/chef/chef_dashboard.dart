@@ -47,16 +47,22 @@ class _ChefDashboardState extends State<ChefDashboard> {
     final category = _itemCategories[itemName] ?? '';
     final catLower = category.toLowerCase();
 
+    // Xác định món thuộc khu nước uống/tráng miệng
+    final isBeverage = catLower.contains('uống') || 
+                       catLower.contains('tráng miệng') || 
+                       catLower.contains('sinh tố') || 
+                       catLower.contains('cà phê') || 
+                       catLower.contains('nước ép') || 
+                       catLower.contains('chè') || 
+                       catLower.contains('kem') ||
+                       (catLower.contains('nước') && !catLower.contains('lẩu'));
+
     if (_selectedArea == 'food') {
-      // Khu Món Ăn: lẩu, khai vị, nhúng, cuốn
-      return catLower.contains('lẩu') || 
-             catLower.contains('khai vị') || 
-             catLower.contains('cuốn');
+      // Khu Món Ăn: tất cả món KHÔNG thuộc khu nước uống (lẩu, khai vị, nhúng, cuốn, món chính,...)
+      return !isBeverage;
     } else if (_selectedArea == 'beverage') {
-      // Khu Nước Uống: tráng miệng, nước, đồ uống
-      return catLower.contains('tráng miệng') || 
-             catLower.contains('uống') ||
-             catLower.contains('nước');
+      // Khu Nước Uống: tráng miệng, đồ uống giải nhiệt, sinh tố,...
+      return isBeverage;
     }
     return true; // Mặc định hiển thị nếu không chọn phân khu
   }

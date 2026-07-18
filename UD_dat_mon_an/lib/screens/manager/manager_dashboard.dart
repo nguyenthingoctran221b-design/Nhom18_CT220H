@@ -212,73 +212,66 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
   }
 
   Future<void> _showChangeTableStatusDialog(TableModel table) async {
-    String selectedStatus = table.status;
+    // Quản lý không được thay đổi trạng thái bàn đang có khách hoặc đã đặt trước
+    if (table.status == 'occupied' || table.status == 'booked') {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Không thể thay đổi', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+          content: Text('Bàn ${table.id} đang ${table.status == 'occupied' ? 'có khách' : 'được đặt trước'}. Quản lý không thể trực tiếp thay đổi trạng thái này.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Đóng'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Chỉ cho phép khóa (empty -> locked) hoặc mở khóa (locked -> empty)
+    final isCurrentlyLocked = table.status == 'locked';
+    final title = isCurrentlyLocked ? 'Mở khóa bàn ${table.id}' : 'Khóa bàn ${table.id}';
+    final content = isCurrentlyLocked
+        ? 'Bạn có chắc chắn muốn mở khóa bàn ${table.id}? Bàn sẽ trở lại trạng thái Trống.'
+        : 'Bạn có chắc chắn muốn khóa bàn ${table.id}? Khách hàng và thu ngân sẽ không thể tương tác với bàn này.';
+    final actionText = isCurrentlyLocked ? 'Mở khóa' : 'Khóa bàn';
 
     await showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: Text('Thay đổi trạng thái bàn ${table.id}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  RadioListTile<String>(
-                    title: const Text('Trống (Màu xanh)'),
-                    value: 'empty',
-                    groupValue: selectedStatus,
-                    onChanged: (val) => setDialogState(() => selectedStatus = val!),
-                  ),
-                  RadioListTile<String>(
-                    title: const Text('Có khách (Màu đỏ)'),
-                    value: 'occupied',
-                    groupValue: selectedStatus,
-                    onChanged: (val) => setDialogState(() => selectedStatus = val!),
-                  ),
-                  RadioListTile<String>(
-                    title: const Text('Đã đặt trước (Màu cam)'),
-                    value: 'booked',
-                    groupValue: selectedStatus,
-                    onChanged: (val) => setDialogState(() => selectedStatus = val!),
-                  ),
-                  RadioListTile<String>(
-                    title: const Text('Khóa / Sửa chữa (Màu vàng)'),
-                    value: 'locked',
-                    groupValue: selectedStatus,
-                    onChanged: (val) => setDialogState(() => selectedStatus = val!),
-                  ),
-                ],
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+          content: Text(content),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isCurrentlyLocked ? Colors.green : AppColors.primary,
+                foregroundColor: Colors.white,
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-                  onPressed: () async {
-                    final Map<String, dynamic> updates = {'status': selectedStatus};
-                    if (selectedStatus == 'occupied') {
-                      updates['entryTime'] = FieldValue.serverTimestamp();
-                    } else {
-                      updates['entryTime'] = null;
-                    }
-
-                    await FirebaseFirestore.instance.collection('tables').doc(table.id).update(updates);
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Đã cập nhật trạng thái bàn ${table.id}')),
-                      );
-                    }
-                  },
-                  child: const Text('Cập nhật'),
-                ),
-              ],
-            );
-          },
+              onPressed: () async {
+                final newStatus = isCurrentlyLocked ? 'empty' : 'locked';
+                await FirebaseFirestore.instance.collection('tables').doc(table.id).update({
+                  'status': newStatus,
+                  'entryTime': null,
+                });
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Đã cập nhật trạng thái bàn ${table.id}')),
+                  );
+                }
+              },
+              child: Text(actionText),
+            ),
+          ],
         );
       },
     );

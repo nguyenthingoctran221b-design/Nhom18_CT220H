@@ -128,8 +128,8 @@ class _TableDetailScreenState extends State<TableDetailScreen> {
         if (order.id == null || order.orderItems == null) continue;
         final docRef = FirebaseFirestore.instance.collection('orders').doc(order.id);
         
-        final doneInThisOrder = order.orderItems!.where((item) => item.status == 'done').toList();
-        final remainingInThisOrder = order.orderItems!.where((item) => item.status != 'done').toList();
+        final doneInThisOrder = order.orderItems!.where((item) => item.status == 'done' || item.status == 'pending').toList();
+        final remainingInThisOrder = order.orderItems!.where((item) => item.status == 'cooking').toList();
 
         if (remainingInThisOrder.isEmpty) {
           // All items in this order are paid
@@ -220,15 +220,15 @@ class _TableDetailScreenState extends State<TableDetailScreen> {
           
           final bool isOccupied = widget.table.status == 'occupied' || orders.isNotEmpty;
 
-          final List<OrderItem> doneItems = [];
-          final List<OrderItem> nonDoneItems = [];
+          final List<OrderItem> doneItems = []; // Thanh toán được (done + pending)
+          final List<OrderItem> nonDoneItems = []; // Khóa thanh toán (cooking)
 
           for (var order in orders) {
             if (order.orderItems != null) {
               for (var item in order.orderItems!) {
-                if (item.status == 'done') {
+                if (item.status == 'done' || item.status == 'pending') {
                   doneItems.add(item);
-                } else {
+                } else if (item.status == 'cooking') {
                   nonDoneItems.add(item);
                 }
               }
@@ -272,7 +272,7 @@ class _TableDetailScreenState extends State<TableDetailScreen> {
                                           Icon(Icons.check_circle, color: Colors.green),
                                           SizedBox(width: 8),
                                           Text(
-                                            'Món đã hoàn thành (Thanh toán đợt này)',
+                                            'Món thanh toán đợt này (Đã xong / Chưa chế biến)',
                                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
                                           ),
                                         ],
@@ -281,7 +281,7 @@ class _TableDetailScreenState extends State<TableDetailScreen> {
                                       if (doneItems.isEmpty)
                                         const Padding(
                                           padding: EdgeInsets.symmetric(vertical: 8),
-                                          child: Text('Chưa có món nào hoàn thành từ bếp.', style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
+                                          child: Text('Chưa có món nào để thanh toán.', style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
                                         )
                                       else
                                         ...doneItems.map((item) => ListTile(
@@ -310,7 +310,7 @@ class _TableDetailScreenState extends State<TableDetailScreen> {
                                           Icon(Icons.hourglass_empty, color: Colors.orange),
                                           SizedBox(width: 8),
                                           Text(
-                                            'Món đang chế biến / Đang đợi',
+                                            'Món đang chế biến (Khóa thanh toán)',
                                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
                                           ),
                                         ],
