@@ -6,8 +6,7 @@ import '../../models/order.dart';
 import '../../services/order_repository.dart';
 
 class CartDialog extends StatefulWidget {
-  final String tableInfo;
-  const CartDialog({super.key, this.tableInfo = 'Unknown'});
+    const CartDialog({super.key});          
 
   @override
   State<CartDialog> createState() => _CartDialogState();
@@ -37,7 +36,7 @@ class _CartDialogState extends State<CartDialog> {
                     Icon(Icons.shopping_cart, color: AppColors.primary),
                     SizedBox(width: 8),
                     Text(
-                      'Giỏ hàng của bạn',
+                      'Thực đơn gọi món',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -220,8 +219,7 @@ class _CartDialogState extends State<CartDialog> {
     });
 
     final order = OrderModel(
-      tableInfo: widget.tableInfo,
-      cartItems: cart.items.values.toList(),
+      items: cart.items.values.toList(),
       totalAmount: cart.totalAmount,
       createdAt: DateTime.now(),
     );
