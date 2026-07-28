@@ -6,7 +6,8 @@ import '../../models/order.dart';
 import '../../services/order_repository.dart';
 
 class CartDialog extends StatefulWidget {
-    const CartDialog({super.key});          
+  final String tableInfo;
+  const CartDialog({super.key, this.tableInfo = 'Unknown'});
 
   @override
   State<CartDialog> createState() => _CartDialogState();
@@ -219,7 +220,8 @@ class _CartDialogState extends State<CartDialog> {
     });
 
     final order = OrderModel(
-      items: cart.items.values.toList(),
+      tableInfo: widget.tableInfo,
+      cartItems: cart.items.values.toList(),
       totalAmount: cart.totalAmount,
       createdAt: DateTime.now(),
     );
