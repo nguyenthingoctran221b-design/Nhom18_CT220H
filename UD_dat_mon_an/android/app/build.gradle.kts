@@ -50,16 +50,19 @@ android {
             val envKeystorePassword = System.getenv("KEYSTORE_PASSWORD")?.trim()
 
             val sPass = if (!envKeystorePassword.isNullOrEmpty()) envKeystorePassword else keystoreProperties.getProperty("storePassword")
-            val kPass = if (!envKeyPassword.isNullOrEmpty()) envKeyPassword else keystoreProperties.getProperty("keyPassword")
+            val alias = if (!envKeyAlias.isNullOrEmpty()) envKeyAlias else keystoreProperties.getProperty("keyAlias")
 
-            keyAlias = if (!envKeyAlias.isNullOrEmpty()) envKeyAlias else keystoreProperties.getProperty("keyAlias")
+            keyAlias = alias
             storePassword = sPass
-            keyPassword = if (!kPass.isNullOrEmpty()) kPass else sPass
+            // Chuẩn PKCS12 bắt buộc keyPassword phải bằng storePassword
+            keyPassword = sPass
 
             val keystorePath = if (!envKeystorePath.isNullOrEmpty()) envKeystorePath else keystoreProperties.getProperty("storeFile")
             if (!keystorePath.isNullOrEmpty()) {
                 storeFile = file(keystorePath)
             }
+
+            println("Release Signing Config -> Alias: '$keyAlias', StoreFile: '${storeFile?.name}'")
         }
     }
 
