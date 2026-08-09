@@ -44,15 +44,18 @@ android {
 
     signingConfigs {
         create("release") {
-            val envKeyAlias = System.getenv("KEY_ALIAS")
-            val envKeyPassword = System.getenv("KEY_PASSWORD")
-            val envKeystorePath = System.getenv("KEYSTORE_PATH")
-            val envKeystorePassword = System.getenv("KEYSTORE_PASSWORD")
+            val envKeyAlias = System.getenv("KEY_ALIAS")?.trim()
+            val envKeyPassword = System.getenv("KEY_PASSWORD")?.trim()
+            val envKeystorePath = System.getenv("KEYSTORE_PATH")?.trim()
+            val envKeystorePassword = System.getenv("KEYSTORE_PASSWORD")?.trim()
+
+            val sPass = if (!envKeystorePassword.isNullOrEmpty()) envKeystorePassword else keystoreProperties.getProperty("storePassword")
+            val kPass = if (!envKeyPassword.isNullOrEmpty()) envKeyPassword else keystoreProperties.getProperty("keyPassword")
 
             keyAlias = if (!envKeyAlias.isNullOrEmpty()) envKeyAlias else keystoreProperties.getProperty("keyAlias")
-            keyPassword = if (!envKeyPassword.isNullOrEmpty()) envKeyPassword else keystoreProperties.getProperty("keyPassword")
-            storePassword = if (!envKeystorePassword.isNullOrEmpty()) envKeystorePassword else keystoreProperties.getProperty("storePassword")
-            
+            storePassword = sPass
+            keyPassword = if (!kPass.isNullOrEmpty()) kPass else sPass
+
             val keystorePath = if (!envKeystorePath.isNullOrEmpty()) envKeystorePath else keystoreProperties.getProperty("storeFile")
             if (!keystorePath.isNullOrEmpty()) {
                 storeFile = file(keystorePath)
