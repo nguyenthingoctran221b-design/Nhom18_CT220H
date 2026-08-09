@@ -40,9 +40,12 @@ jobs:
       - name: Decode Android Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.jks
+            echo "--- Keytool List Check ---"
+            keytool -list -keystore android/app/release.jks -storepass "$KEYSTORE_PASSWORD"
           fi
 
       - name: Build Release APK
