@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -6,6 +9,12 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -33,11 +42,32 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            val envKeyAlias = System.getenv("KEY_ALIAS")
+            val envKeyPassword = System.getenv("KEY_PASSWORD")
+            val envKeystorePath = System.getenv("KEYSTORE_PATH")
+            val envKeystorePassword = System.getenv("KEYSTORE_PASSWORD")
+
+            keyAlias = if (!envKeyAlias.isNullOrEmpty()) envKeyAlias else keystoreProperties.getProperty("keyAlias")
+            keyPassword = if (!envKeyPassword.isNullOrEmpty()) envKeyPassword else keystoreProperties.getProperty("keyPassword")
+            storePassword = if (!envKeystorePassword.isNullOrEmpty()) envKeystorePassword else keystoreProperties.getProperty("storePassword")
+            
+            val keystorePath = if (!envKeystorePath.isNullOrEmpty()) envKeystorePath else keystoreProperties.getProperty("storeFile")
+            if (!keystorePath.isNullOrEmpty()) {
+                storeFile = file(keystorePath)
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            val releaseSigning = signingConfigs.getByName("release")
+            signingConfig = if (releaseSigning.storeFile != null && releaseSigning.storeFile!!.exists()) {
+                releaseSigning
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
@@ -45,3 +75,4 @@ android {
 flutter {
     source = "../.."
 }
+
