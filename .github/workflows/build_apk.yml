@@ -58,9 +58,12 @@ jobs:
           retention-days: 7
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v1.0.0
+          name: Release v1.0.0 (Tự động)
+          draft: false
+          prerelease: false
           files: UD_dat_mon_an/build/app/outputs/flutter-apk/app-release-signed.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
