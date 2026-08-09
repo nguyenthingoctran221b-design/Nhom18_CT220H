@@ -44,6 +44,8 @@ android {
 
     signingConfigs {
         create("release") {
+            storeType = "PKCS12"
+
             val envKeyAlias = System.getenv("KEY_ALIAS")?.trim()
             val envKeyPassword = System.getenv("KEY_PASSWORD")?.trim()
             val envKeystorePath = System.getenv("KEYSTORE_PATH")?.trim()
@@ -54,7 +56,6 @@ android {
 
             keyAlias = alias
             storePassword = sPass
-            // Chuẩn PKCS12 bắt buộc keyPassword phải bằng storePassword
             keyPassword = sPass
 
             val keystorePath = if (!envKeystorePath.isNullOrEmpty()) envKeystorePath else keystoreProperties.getProperty("storeFile")
